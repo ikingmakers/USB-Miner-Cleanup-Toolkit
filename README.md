@@ -49,7 +49,7 @@ Removed shortcut: E:\USB Drive\.lnk
 
 ## Author
 
-Happy — system administrator who faced a fleet-wide infection and built this toolkit to eliminate the `svctrl64` miner quickly and repeatably. Add your GitHub profile/contact here.
+I King Makers — system administrator who faced a fleet-wide infection and built this toolkit to eliminate the `svctrl64` miner quickly and repeatably. Follow updates and discussions in the Telegram group: [t.me/ikingmakers](https://t.me/ikingmakers). Need a private tunnel? Check out the community VPN service: [t.me/shadofyBot?start=utm_github](https://t.me/shadofyBot?start=utm_github).
 
 ## Why This Repo Exists
 
@@ -113,7 +113,7 @@ Removed shortcut: E:\USB Drive\.lnk
 
 ## Автор
 
-Happy — системный администратор/айтишник, который столкнулся с массовым заражением корпоративных ноутбуков и написал утилиту, чтобы быстро вычищать последствия. Контакт: GitHub-профиль автора (добавьте ссылку).
+ikingmakers — системный администратор/айтишник, который столкнулся с массовым заражением корпоративных ноутбуков и написал утилиту, чтобы быстро вычищать последствия. За обновлениями и новостями следите в Telegram: [t.me/ikingmakers](https://t.me/ikingmakers). Для безопасного доступа используйте VPN-сервис сообщества: [t.me/shadofyBot](https://t.me/shadofyBot?start=utm_github).
 
 ## Зачем нужен этот репозиторий
 

@@ -1,4 +1,4 @@
-# USB Miner Cleanup Toolkit 🛡️
+# USB MinerShortcut Cleanup Toolkit 🛡️
 
 PowerShell toolkit that scrubs an aggressive USB crypto miner which hijacks the Windows service layer and propagates through removable media. It targets shortcut-based malware families that replace real files with `.lnk` launchers pointing back to malicious payloads. Below you’ll find threat behaviour, remediation steps, and usage details.
 
@@ -63,7 +63,7 @@ Made with love ❤️
 
 ---
 
-# USB Miner Cleanup Toolkit (RU)
+# USB MinerShortcut Cleanup Toolkit (RU)
 
 Скрипт удаляет навязчивый USB-майнер, который маскируется под системный сервис и распространяется через флешки. Угроза относится к семейству «shortcut вирусов», заменяющих настоящие файлы на `.lnk`-ярлыки, запускающие вредоносный загрузчик.
 

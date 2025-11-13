@@ -176,6 +176,88 @@ function Clear-UsbDrive {
     Write-Host "`nUSB drive cleanup completed for $driveRoot. Log file: $logPath"
 }
 
+function Remove-ShortcutsEverywhere {
+    Write-Log "=== Shortcut purge started ==="
+    Write-Host "Shortcut cleanup modes:" -ForegroundColor Cyan
+    Write-Host "  1 - Specify a folder path"
+    Write-Host "  2 - Select a removable drive (excluding C:)"
+
+    $choice = Read-Host "Choose cleanup mode (1/2)"
+    switch ($choice) {
+        '1' {
+            $inputPath = Read-Host "Enter full path to folder"
+            if (-not $inputPath) {
+                Write-Host "Path not provided. Cancelling."
+                Write-Log "Shortcut purge cancelled: empty path."
+                return
+            }
+            if (-not (Test-Path -LiteralPath $inputPath)) {
+                Write-Host "Path not found: $inputPath" -ForegroundColor Yellow
+                Write-Log "Shortcut purge cancelled: path not found $inputPath"
+                return
+            }
+            $targetRoot = (Get-Item -LiteralPath $inputPath).FullName
+        }
+        '2' {
+            $drive = Select-UsbDrive
+            if (-not $drive) {
+                Write-Host "Shortcut cleanup cancelled."
+                return
+            }
+            $targetRoot = $drive.Name
+            Write-Log "Shortcut purge target drive: $targetRoot"
+        }
+        default {
+            Write-Host "Unknown option. Cancelling."
+            Write-Log "Shortcut purge cancelled: invalid option $choice"
+            return
+        }
+    }
+
+    Write-Log "Scanning for shortcuts under: $targetRoot"
+
+    $removedShortcuts = @()
+    $failedShortcuts = @()
+
+    try {
+        $shortcuts = Get-ChildItem -Path $targetRoot -Filter '*.lnk' -Force -Recurse -ErrorAction Stop
+        if ($shortcuts) {
+            foreach ($shortcut in $shortcuts) {
+                try {
+                    Clear-ItemAttributes -TargetPath $shortcut.FullName
+                    Remove-Item -LiteralPath $shortcut.FullName -Force -ErrorAction Stop
+                    Write-Log "Removed shortcut: $($shortcut.FullName)"
+                    $removedShortcuts += $shortcut.FullName
+                } catch {
+                    $errorMessage = $_.Exception.Message
+                    Write-Log "Failed to remove shortcut $($shortcut.FullName): $errorMessage"
+                    Write-Host "Failed to remove shortcut $($shortcut.FullName): $errorMessage" -ForegroundColor Red
+                    $failedShortcuts += "$($shortcut.FullName) ($errorMessage)"
+                }
+            }
+        } else {
+            Write-Log "No shortcuts found under $targetRoot."
+        }
+    } catch {
+        $errorMessage = $_.Exception.Message
+        Write-Log "Failed to enumerate shortcuts under ${targetRoot}: $errorMessage"
+        Write-Host "Failed to enumerate shortcuts: $errorMessage" -ForegroundColor Red
+        $failedShortcuts += "Enumeration failed ($errorMessage)"
+    }
+
+    if ($removedShortcuts.Count -gt 0) {
+        Write-Host "`nRemoved shortcuts:" -ForegroundColor Green
+        $removedShortcuts | ForEach-Object { Write-Host "  $_" -ForegroundColor Green }
+    }
+    if ($failedShortcuts.Count -gt 0) {
+        Write-Host "`nFailed to remove shortcuts:" -ForegroundColor Red
+        $failedShortcuts | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+    }
+
+    Write-Log "=== Shortcut purge completed ==="
+    Write-Host "Shortcut cleanup finished. Log file: $logPath"
+}
+
 function Remove-MalwareRegistry {
     Write-Log "=== Registry and scheduled task cleanup started ==="
     $serviceRoot = "HKLM:\SYSTEM\CurrentControlSet\Services"
@@ -310,6 +392,7 @@ function Show-Menu {
     Write-Host "1 - Remove registry entries and scheduled task (will reboot)"
     Write-Host "2 - Remove files from C:\Windows\System32"
     Write-Host "3 - Clean USB drive (remove attributes, sysvolume, shortcuts)"
+    Write-Host "4 - Remove shortcuts in chosen path or drive"
     Write-Host "0 - Exit"
     Write-Host ""
     return Read-Host "Select action"
@@ -320,6 +403,7 @@ while ($true) {
         '1' { Remove-MalwareRegistry; break }
         '2' { Remove-MalwareFiles }
         '3' { Clear-UsbDrive }
+        '4' { Remove-ShortcutsEverywhere }
         '0' { Write-Host "Exit. Log file: $logPath"; break }
         default { Write-Host "Unknown choice. Try again." }
     }

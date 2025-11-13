@@ -57,7 +57,7 @@ function Get-SanitizedRelativeName {
     return ($SourcePath -replace '[:\\]', '_').Trim('_')
 }
 
-function Collect-And-RemoveItem {
+function Move-ItemToArchive {
     param(
         [string]$SourcePath,
         $ArchiveSession
@@ -92,7 +92,7 @@ function Collect-And-RemoveItem {
     }
 }
 
-function Finalize-ArchiveSession {
+function Complete-ArchiveSession {
     param($ArchiveSession, [string]$SummaryTitle)
 
     try {
@@ -104,7 +104,7 @@ function Finalize-ArchiveSession {
         $hasEntries = [System.IO.Directory]::EnumerateFileSystemEntries($ArchiveSession.StagePath) | Select-Object -First 1
         if (-not $hasEntries) {
             Remove-Item -LiteralPath $ArchiveSession.StagePath -Force
-            Write-Log "$SummaryTitle: nothing collected; staging removed."
+            Write-Log "${SummaryTitle}: nothing collected; staging removed."
             return
         }
 
@@ -118,11 +118,11 @@ function Finalize-ArchiveSession {
         )
 
         Remove-Item -LiteralPath $ArchiveSession.StagePath -Recurse -Force
-        Write-Log "$SummaryTitle: archive created at $($ArchiveSession.ZipPath)"
-        Write-Host "`n$SummaryTitle archived to: $($ArchiveSession.ZipPath)" -ForegroundColor Green
+        Write-Log "${SummaryTitle}: archive created at $($ArchiveSession.ZipPath)"
+        Write-Host "`n${SummaryTitle} archived to: $($ArchiveSession.ZipPath)" -ForegroundColor Green
     } catch {
-        Write-Log "$SummaryTitle: failed to create archive: $($_.Exception.Message)"
-        Write-Host "$SummaryTitle: failed to create archive: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Log "${SummaryTitle}: failed to create archive: $($_.Exception.Message)"
+        Write-Host "${SummaryTitle}: failed to create archive: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
@@ -193,7 +193,7 @@ function Remove-MalwareFiles {
 
     foreach ($path in $paths) {
         if (Test-Path -LiteralPath $path) {
-            if (Collect-And-RemoveItem -SourcePath $path -ArchiveSession $archiveSession) {
+            if (Move-ItemToArchive -SourcePath $path -ArchiveSession $archiveSession) {
                 $removedItems += $path
             } else {
                 $failedItems += $path
@@ -210,7 +210,7 @@ function Remove-MalwareFiles {
 
         if ($dlls) {
             foreach ($dll in $dlls) {
-                if (Collect-And-RemoveItem -SourcePath $dll.FullName -ArchiveSession $archiveSession) {
+                if (Move-ItemToArchive -SourcePath $dll.FullName -ArchiveSession $archiveSession) {
                     $removedItems += $dll.FullName
                 } else {
                     $failedItems += $dll.FullName
@@ -239,7 +239,7 @@ function Remove-MalwareFiles {
         $failedItems | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
     }
 
-    Finalize-ArchiveSession -ArchiveSession $archiveSession -SummaryTitle "System32 cleanup"
+    Complete-ArchiveSession -ArchiveSession $archiveSession -SummaryTitle "System32 cleanup"
 
     Write-Log "=== File cleanup completed ==="
     Write-Host "File cleanup completed. Log file: $logPath"
@@ -320,7 +320,7 @@ function Clear-UsbDriveAndArchive {
 
     $sysvolumePath = Join-Path -Path $driveRoot -ChildPath "sysvolume"
     if (Test-Path -LiteralPath $sysvolumePath) {
-        if (Collect-And-RemoveItem -SourcePath $sysvolumePath -ArchiveSession $archiveSession) {
+        if (Move-ItemToArchive -SourcePath $sysvolumePath -ArchiveSession $archiveSession) {
             $removedItems += $sysvolumePath
         } else {
             $failedItems += $sysvolumePath
@@ -334,7 +334,7 @@ function Clear-UsbDriveAndArchive {
         $shortcuts = Get-ChildItem -Path $driveRoot -Filter '*.lnk' -Force -Recurse -ErrorAction Stop
         if ($shortcuts) {
             foreach ($shortcut in $shortcuts) {
-                if (Collect-And-RemoveItem -SourcePath $shortcut.FullName -ArchiveSession $archiveSession) {
+                if (Move-ItemToArchive -SourcePath $shortcut.FullName -ArchiveSession $archiveSession) {
                     $removedShortcuts += $shortcut.FullName
                 } else {
                     $failedShortcuts += $shortcut.FullName
@@ -371,7 +371,7 @@ function Clear-UsbDriveAndArchive {
         $failedShortcuts | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
     }
 
-    Finalize-ArchiveSession -ArchiveSession $archiveSession -SummaryTitle "USB drive cleanup"
+    Complete-ArchiveSession -ArchiveSession $archiveSession -SummaryTitle "USB drive cleanup"
 
     Write-Log "=== USB drive cleanup completed ==="
     Write-Host "`nUSB drive cleanup completed for $driveRoot. Log file: $logPath"
